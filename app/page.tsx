@@ -1,103 +1,201 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { KpiCard } from "@/components/kpis/KpiCard";
+import { CostTrend } from "@/components/charts/CostTrend";
+import { CostAttribution } from "@/components/panels/CostAttribution";
+import { EC2Table } from "@/components/tables/EC2Table";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { DollarSign, TrendingUp, Server } from "lucide-react";
+import { formatCurrency } from "@/lib/cost";
+import { TopNav } from "@/components/layout/TopNav";
+import { FilterPanel } from "@/components/filters";
+import { useAppliedFilters } from "@/store/filters";
+import { Recommendations } from "@/components/panels/Recommendations";
+
+// API functions
+const fetchEC2Instances = async () => {
+  const response = await fetch("/api/ec2");
+  if (!response.ok) throw new Error("Failed to fetch EC2 instances");
+  return response.json();
+};
+
+const fetchMetrics = async () => {
+  const response = await fetch("/api/metrics?period=7d");
+  if (!response.ok) throw new Error("Failed to fetch metrics");
+  return response.json();
+};
+
+export default function DashboardPage() {
+  const [costDimension, setCostDimension] = useState<
+    "region" | "instanceType" | "service" | "account" | "job"
+  >("region");
+
+  const { data: ec2Data, isLoading: ec2Loading } = useQuery({
+    queryKey: ["ec2", "instances"],
+    queryFn: fetchEC2Instances,
+  });
+
+  const appliedFilters = useAppliedFilters();
+  const filterParams = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    for (const f of appliedFilters) {
+      map[f.categoryId] = f.values;
+    }
+    const regions = (map["region"] || []).join(",");
+    const instanceTypes = (map["instanceType"] || []).join(",");
+    const qsParts = [
+      `dimension=${costDimension}`,
+      regions ? `region=${encodeURIComponent(regions)}` : "",
+      instanceTypes ? `instanceType=${encodeURIComponent(instanceTypes)}` : "",
+    ].filter(Boolean);
+    return qsParts.join("&");
+  }, [appliedFilters, costDimension]);
+
+  const { data: costData, isLoading: costLoading } = useQuery({
+    queryKey: ["costs", "breakdown", costDimension, filterParams],
+    queryFn: () =>
+      fetch(`/api/costs?${filterParams}`).then((res) => res.json()),
+  });
+
+  const { data: metricsData, isLoading: metricsLoading } = useQuery({
+    queryKey: ["metrics", "trend", "7d"],
+    queryFn: fetchMetrics,
+  });
+
+  if (ec2Loading || costLoading || metricsLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <TopNav />
+        <main className="container mx-auto px-4 py-6">
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-32 bg-muted animate-pulse rounded-lg"
+                />
+              ))}
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="h-80 bg-muted animate-pulse rounded-lg" />
+              <div className="h-80 bg-muted animate-pulse rounded-lg" />
+            </div>
+            <div className="h-96 bg-muted animate-pulse rounded-lg" />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const kpis = costData?.kpis || {};
+  const instances = ec2Data?.instances || [];
+  const costBreakdowns = costData?.breakdowns || [];
+  const costTrend = metricsData?.trend || [];
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-background">
+      <TopNav />
+      <main className="container mx-auto px-4 py-6">
+        <div className="space-y-6">
+          {/* KPI Cards Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <KpiCard
+                    title="Total Monthly Cost"
+                    value={formatCurrency(kpis.totalMonthly || 0)}
+                    delta={kpis.changePercentage}
+                    deltaType={
+                      kpis.changePercentage > 0 ? "increase" : "decrease"
+                    }
+                    icon={DollarSign}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Total AWS costs for the current month</p>
+              </TooltipContent>
+            </Tooltip>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <KpiCard
+                    title="Daily Burn Rate"
+                    value={formatCurrency(kpis.dailyBurn || 0)}
+                    icon={TrendingUp}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Average daily cost based on current usage</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <KpiCard
+                    title="Projected Monthly"
+                    value={formatCurrency(kpis.projectedMonth || 0)}
+                    icon={TrendingUp}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Projected monthly cost based on current daily burn rate</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <KpiCard
+                    title="Active Instances"
+                    value={instances.length}
+                    icon={Server}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Number of currently running EC2 instances</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <CostTrend data={costTrend} period="7d" />
+            <CostAttribution
+              breakdowns={costBreakdowns}
+              dimension={costDimension}
+              dataSource={costData?.dataSource || "mock"}
+              onDimensionChange={setCostDimension}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          </div>
+
+          {/* Filter Panel and EC2 Table Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="lg:col-span-1">
+              <FilterPanel />
+            </div>
+            <div className="lg:col-span-3">
+              <EC2Table instances={instances} />
+            </div>
+          </div>
+
+          {/* Recommendations */}
+          <Recommendations instances={instances} />
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }
