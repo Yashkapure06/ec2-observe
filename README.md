@@ -8,6 +8,39 @@ This prototype addresses the core challenge faced by research teams: **understan
 
 ## 🚀 Key Features
 
+
+
+## Screenshots of Working UI
+
+The following screenshots demonstrate the dashboard in action with simulated data:
+
+![Dashboard Main View](./screenshots/main-dashboard.png)
+_Complete dashboard showing KPIs, cost trends, attribution charts, and EC2 table with waste indicators_
+
+![Cost Attribution](./screenshots/cost-attribution.png)
+_Multi-dimensional cost breakdown with interactive dimension selector (Region/Instance Type/Service/Account/Job)_
+
+![EC2 Table with Waste Indicators](./screenshots/ec2-table-waste.png)
+
+![EC2 Table with Waste Indicators](./screenshots/ec2-table-waste-2.png)
+_EC2 instances table featuring color-coded waste scoring and inline drilldown capabilities_
+
+![Timeline Modal](./screenshots/timeline-modal.png)
+
+![Timeline Modal](./screenshots/timeline-modal-2.png)
+_Detailed instance timeline view showing CPU and memory utilization over time_
+
+![Filter Panel](./screenshots/filter-panel.png)
+
+![Filter Panel](./screenshots/filter-panel-2.png)
+
+![Filter Panel](./screenshots/filter-panel-3.png)
+_Global filter system affecting all dashboard components simultaneously_
+
+![Recommendations](./screenshots/recommendations.png)
+_Cost optimization recommendations with potential savings and quick filter actions_
+
+
 ### 📊 EC2 Instance Utilization Table
 
 - **Core Metrics**: CPU, RAM, GPU utilization with visual progress bars
