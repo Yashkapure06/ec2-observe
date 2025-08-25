@@ -163,21 +163,21 @@ export function CostTrend({ data, period, className }: CostTrendProps) {
   const anomalyData = enrichedData.filter((point) => point.isAnomaly);
 
   // Debug logging
-  console.log("CostTrend Debug:", {
-    dataLength: data.length,
-    enrichedDataLength: enrichedData.length,
-    anomalyFlag,
-    anomalyDataLength: anomalyData.length,
-    anomalyData: anomalyData.map((a) => ({
-      date: a.date,
-      amount: a.amount,
-      isAnomaly: a.isAnomaly,
-    })),
-    // Show the first few data points to verify structure
-    sampleData: sortedData
-      .slice(0, 3)
-      .map((d) => ({ date: d.date, amount: d.amount, isAnomaly: d.isAnomaly })),
-  });
+  // console.log("CostTrend Debug:", {
+  //   dataLength: data.length,
+  //   enrichedDataLength: enrichedData.length,
+  //   anomalyFlag,
+  //   anomalyDataLength: anomalyData.length,
+  //   anomalyData: anomalyData.map((a) => ({
+  //     date: a.date,
+  //     amount: a.amount,
+  //     isAnomaly: a.isAnomaly,
+  //   })),
+  //   // Show the first few data points to verify structure
+  //   sampleData: sortedData
+  //     .slice(0, 3)
+  //     .map((d) => ({ date: d.date, amount: d.amount, isAnomaly: d.isAnomaly })),
+  // });
 
   return (
     <Card className={className}>

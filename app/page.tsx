@@ -69,7 +69,8 @@ export default function DashboardPage() {
     queryFn: fetchMetrics,
   });
 
-  if (ec2Loading || costLoading || metricsLoading) {
+  // Only show full page loading for initial load, not for dimension changes
+  if (ec2Loading || metricsLoading) {
     return (
       <div className="min-h-screen bg-background">
         <TopNav />
@@ -178,6 +179,7 @@ export default function DashboardPage() {
               breakdowns={costBreakdowns}
               dimension={costDimension}
               dataSource={costData?.dataSource || "mock"}
+              isLoading={costLoading}
               onDimensionChange={setCostDimension}
             />
           </div>
@@ -194,6 +196,29 @@ export default function DashboardPage() {
 
           {/* Recommendations */}
           <Recommendations instances={instances} />
+
+          {/* Submission Notes */}
+          {/* <div className="mt-8 p-4 border rounded-lg bg-muted/50 text-sm space-y-2">
+            <div className="font-medium">Submission notes</div>
+
+            <div>
+              <strong>UX tradeoff</strong>: Optimized for information density
+              (table + inline drilldowns) over minimalism so power users can
+              scan many instances at once.
+            </div>
+            <div>
+              <strong>Assumption about users</strong>: Bioinformaticians are
+              technically fluent but time‑constrained; they prefer fast, precise
+              controls (filters, timelines, anomaly details) over wizard‑style
+              flows.
+            </div>
+            <div>
+              <strong>Feature not built</strong>: Real‑time WebSocket updates.
+              Chosen to keep MVP simple and reliable; polling + React Query
+              caching is sufficient. The API/UI are structured to add WebSockets
+              later.
+            </div>
+          </div> */}
         </div>
       </main>
     </div>

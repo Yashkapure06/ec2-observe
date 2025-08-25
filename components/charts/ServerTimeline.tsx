@@ -85,7 +85,7 @@ export function ServerTimeline({ data, className }: ServerTimelineProps) {
       }
     };
 
-    console.log("Raw data points:", data.dataPoints);
+    // console.log("Raw data points:", data.dataPoints);
     const processed = validDataPoints.map((point) => ({
       ...point,
       formattedTime: formatTimestamp(point.timestamp, data.period),
@@ -262,12 +262,11 @@ export function ServerTimeline({ data, className }: ServerTimelineProps) {
 
         {/* Chart */}
         <div className="mb-6">
-          <div className="mb-2 text-xs text-muted-foreground">
+          {/* <div className="mb-2 text-xs text-muted-foreground">
             Debug: {chartData.length} data points, selected metric:{" "}
             {selectedMetric}
           </div>
 
-          {/* Simple test chart to verify data */}
           <div className="mb-4 p-4 bg-muted rounded-lg">
             <h4 className="text-sm font-medium mb-2">Raw Data Test</h4>
             <div className="text-xs space-y-1">
@@ -278,7 +277,7 @@ export function ServerTimeline({ data, className }: ServerTimelineProps) {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
 
           <ResponsiveContainer width="100%" height={300}>
             <LineChart

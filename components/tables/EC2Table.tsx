@@ -72,18 +72,20 @@ function ActionsCell({ instance }: { instance: EC2Instance }) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center space-x-2 opacity-50 cursor-not-allowed"
-            disabled
-          >
-            <BarChart3 className="h-4 w-4" />
-            <span>Timeline</span>
-          </Button>
+          <div className="inline-block cursor-help">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center space-x-2 opacity-50 pointer-events-none"
+              disabled
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span>Timeline</span>
+            </Button>
+          </div>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Timeline data only available for real AWS instances</p>
+          <p>Timeline works only for real AWS data</p>
         </TooltipContent>
       </Tooltip>
     );

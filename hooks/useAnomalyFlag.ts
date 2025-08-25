@@ -20,12 +20,14 @@ export function useAnomalyFlag(
     const mean =
       amounts.reduce((sum, amount) => sum + amount, 0) / amounts.length;
 
+    //variance
     const variance =
       amounts.reduce((sum, amount) => {
         const diff = amount - mean;
         return sum + diff * diff;
       }, 0) / amounts.length;
 
+    //standard deviation
     const stdDev = Math.sqrt(variance);
 
     // Find anomalies (points with z-score > threshold)
