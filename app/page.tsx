@@ -109,7 +109,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Tooltip>
               <TooltipTrigger asChild>
-                <div>
+                <div className="h-full">
                   <KpiCard
                     title="Total Monthly Cost"
                     value={formatCurrency(kpis.totalMonthly || 0)}
@@ -118,6 +118,7 @@ export default function DashboardPage() {
                       kpis.changePercentage > 0 ? "increase" : "decrease"
                     }
                     icon={DollarSign}
+                    className="h-full"
                   />
                 </div>
               </TooltipTrigger>
@@ -128,11 +129,12 @@ export default function DashboardPage() {
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <div>
+                <div className="h-full">
                   <KpiCard
                     title="Daily Burn Rate"
                     value={formatCurrency(kpis.dailyBurn || 0)}
                     icon={TrendingUp}
+                    className="h-full"
                   />
                 </div>
               </TooltipTrigger>
@@ -143,11 +145,12 @@ export default function DashboardPage() {
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <div>
+                <div className="h-full">
                   <KpiCard
                     title="Projected Monthly"
                     value={formatCurrency(kpis.projectedMonth || 0)}
                     icon={TrendingUp}
+                    className="h-full"
                   />
                 </div>
               </TooltipTrigger>
@@ -158,11 +161,12 @@ export default function DashboardPage() {
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <div>
+                <div className="h-full">
                   <KpiCard
                     title="Active Instances"
                     value={instances.length}
                     icon={Server}
+                    className="h-full"
                   />
                 </div>
               </TooltipTrigger>
@@ -185,13 +189,9 @@ export default function DashboardPage() {
           </div>
 
           {/* Filter Panel and EC2 Table Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <div className="lg:col-span-1">
-              <FilterPanel />
-            </div>
-            <div className="lg:col-span-3">
-              <EC2Table instances={instances} />
-            </div>
+          <div className="space-y-4">
+            <FilterPanel />
+            <EC2Table instances={instances} />
           </div>
 
           {/* Recommendations */}
