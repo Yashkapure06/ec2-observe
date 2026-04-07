@@ -177,54 +177,33 @@ export function EC2Table({ instances, className }: EC2TableProps) {
   const columns: ColumnDef<EC2Instance>[] = useMemo(
     () => [
       {
-        accessorKey: "id",
-        header: "Instance ID",
-        cell: ({ row }) => (
-          <div className="font-mono text-sm">{row.getValue("id")}</div>
-        ),
-      },
-      {
-        accessorKey: "name",
-        header: "Name",
-        cell: ({ row }) => (
-          <div className="flex items-center space-x-2">
-            <Server className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">{row.getValue("name")}</span>
-          </div>
-        ),
-      },
-      {
-        accessorKey: "type",
-        header: "Type",
-        cell: ({ row }) => (
-          <Badge variant="outline" className="font-mono">
-            {row.getValue("type")}
-          </Badge>
-        ),
-      },
-      {
-        accessorKey: "region",
-        header: "Region",
-        cell: ({ row }) => (
-          <Badge variant="secondary">{row.getValue("region")}</Badge>
-        ),
-      },
-      {
-        accessorKey: "accountId",
-        header: "Account ID",
-        cell: ({ row }) => (
-          <div className="font-mono text-sm">
-            {row.getValue("accountId") || "-"}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "state",
-        header: "State",
+        id: "resource",
+        header: "Resource",
         cell: ({ row }) => {
-          const state = row.getValue("state") as string;
-          const getStateColor = (state: string) => {
-            switch (state) {
+          const { name, id, region } = row.original;
+          return (
+            <div className="flex flex-col space-y-1">
+              <div className="flex items-center space-x-2">
+                <Server className="h-4 w-4 text-muted-foreground" />
+                <span className="font-semibold text-foreground">{name}</span>
+              </div>
+              <div className="text-xs text-muted-foreground flex items-center space-x-2">
+                <span className="font-mono">{id}</span>
+                <span>•</span>
+                <span>{region}</span>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        id: "configuration",
+        header: "Configuration",
+        cell: ({ row }) => {
+          const { type, state, accountId } = row.original;
+          
+          const getStateColor = (s: string) => {
+            switch (s) {
               case "running":
                 return "bg-green-100 text-green-800 border-green-200";
               case "stopped":
@@ -241,90 +220,80 @@ export function EC2Table({ instances, className }: EC2TableProps) {
           };
 
           return (
-            <Badge
-              variant="outline"
-              className={`font-medium ${getStateColor(state)}`}
-            >
-              {state.charAt(0).toUpperCase() + state.slice(1)}
-            </Badge>
-          );
-        },
-      },
-      {
-        accessorKey: "cpuUtilPct",
-        header: "CPU",
-        cell: ({ row }) => {
-          const value = row.getValue("cpuUtilPct") as number;
-          return (
-            <div className="flex items-center space-x-2">
-              <Cpu className="h-4 w-4 text-muted-foreground" />
-              <div className="w-20">
-                <Progress value={value} className="h-2" />
+            <div className="flex flex-col space-y-1">
+              <div className="flex items-center space-x-2">
+                <Badge variant="outline" className="font-mono bg-background">
+                  {type}
+                </Badge>
+                <Badge variant="outline" className={`font-medium ${getStateColor(state)}`}>
+                  {state.charAt(0).toUpperCase() + state.slice(1)}
+                </Badge>
               </div>
-              <span className="text-sm font-medium w-12">{value}%</span>
+              <div className="text-xs text-muted-foreground">
+                Account: <span className="font-mono">{accountId || "-"}</span>
+              </div>
             </div>
           );
         },
       },
       {
-        accessorKey: "ramUtilPct",
-        header: "RAM",
+        id: "utilization",
+        header: "Utilization",
         cell: ({ row }) => {
-          const value = row.getValue("ramUtilPct") as number;
+          const cpu = row.original.cpuUtilPct;
+          const ram = row.original.ramUtilPct;
+          const gpu = row.original.gpuUtilPct;
+          
+          const getMetricColor = (val: number) => {
+            if (val > 80) return "text-red-500";
+            if (val < 10) return "text-yellow-500";
+            return "text-green-500";
+          };
+
           return (
-            <div className="flex items-center space-x-2">
-              <HardDrive className="h-4 w-4 text-muted-foreground" />
-              <div className="w-20">
-                <Progress value={value} className="h-2" />
+            <div className="flex items-center space-x-3 text-sm">
+              <div className="flex flex-col items-center">
+                <span className="text-xs text-muted-foreground mb-1">CPU</span>
+                <span className={`font-semibold ${getMetricColor(cpu)}`}>{cpu}%</span>
               </div>
-              <span className="text-sm font-medium w-12">{value}%</span>
+              <div className="flex flex-col items-center">
+                <span className="text-xs text-muted-foreground mb-1">RAM</span>
+                <span className={`font-semibold ${getMetricColor(ram)}`}>{ram}%</span>
+              </div>
+              {gpu > 0 && (
+                <div className="flex flex-col items-center">
+                  <span className="text-xs text-muted-foreground mb-1">GPU</span>
+                  <span className={`font-semibold ${getMetricColor(gpu)}`}>{gpu}%</span>
+                </div>
+              )}
             </div>
           );
         },
       },
       {
-        accessorKey: "gpuUtilPct",
-        header: "GPU",
+        id: "impact",
+        header: "Cost Impact",
         cell: ({ row }) => {
-          const value = row.getValue("gpuUtilPct") as number;
-          return (
-            <div className="flex items-center space-x-2">
-              <Monitor className="h-4 w-4 text-muted-foreground" />
-              <div className="w-20">
-                <Progress value={value} className="h-2" />
-              </div>
-              <span className="text-sm font-medium w-12">{value}%</span>
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: "uptimeHrs",
-        header: "Uptime",
-        cell: ({ row }) => {
-          const hours = row.getValue("uptimeHrs") as number;
+          const cost = row.original.costPerHour;
+          const hours = row.original.uptimeHrs;
           const days = Math.floor(hours / 24);
           const remainingHours = hours % 24;
+          
+          // Determine if we should show projected monthly cost or just per hour
+          const projectedMonthly = cost * 730;
+
           return (
-            <div className="flex items-center space-x-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">
-                {days > 0 ? `${days}d ` : ""}
-                {remainingHours}h
-              </span>
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: "costPerHour",
-        header: "Cost/hr",
-        cell: ({ row }) => {
-          const cost = row.getValue("costPerHour") as number;
-          return (
-            <div className="flex items-center space-x-2">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">{formatCurrency(cost)}</span>
+            <div className="flex flex-col space-y-1">
+              <div className="flex items-center space-x-1 font-semibold text-foreground">
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <span>{formatCurrency(cost)}/hr</span>
+              </div>
+              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+                <Clock className="h-3 w-3" />
+                <span>Up: {days > 0 ? `${days}d ` : ""}{remainingHours}h</span>
+                <span>•</span>
+                <span>~{formatCurrency(projectedMonthly)}/mo</span>
+              </div>
             </div>
           );
         },
@@ -345,16 +314,19 @@ export function EC2Table({ instances, className }: EC2TableProps) {
           return (
             <Tooltip>
               <TooltipTrigger>
-                <Badge className={getWasteScoreColor(waste.level)}>
-                  {waste.level.charAt(0).toUpperCase() + waste.level.slice(1)}
-                </Badge>
+                <div className="flex flex-col items-start gap-1">
+                  <Badge className={getWasteScoreColor(waste.level)}>
+                    {waste.level.charAt(0).toUpperCase() + waste.level.slice(1)}
+                  </Badge>
+                  {waste.score > 0 && <span className="text-xs text-muted-foreground font-medium pl-1">Score: {waste.score}/100</span>}
+                </div>
               </TooltipTrigger>
               <TooltipContent>
                 <div className="max-w-xs">
                   <p className="font-medium">Waste Score: {waste.score}/100</p>
                   <ul className="mt-2 space-y-1">
                     {waste.reasons.map((reason, index) => (
-                      <li key={index} className="text-sm">
+                      <li key={index} className="text-sm border-b border-border/40 pb-1 last:border-0">
                         • {reason}
                       </li>
                     ))}
